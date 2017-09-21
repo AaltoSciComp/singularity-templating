@@ -1,0 +1,14 @@
+    #
+    # This snippet installs python and required Pip packages
+    #
+    # Author: Simo Tuomisto <simo.tuomisto@aalto.fi>
+    #
+    apt-get clean && apt-get -y install python-dev python-pip \
+        cmake tar unzip
+    {% if python %}
+    {% if python.pip_packages %}
+    {% for package in python.pip_packages %}
+    pip install -U {{ package }}
+    {% endfor %}
+    {% endif %}
+    {% endif %}

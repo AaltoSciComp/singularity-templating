@@ -1,0 +1,48 @@
+#!/bin/bash
+
+# create-singularity-image
+#
+# Wrapper for jenkins job worker so that 
+# usage of sudos can be kept at minimum
+#
+# Author: Simo Tuomisto <simo.tuomisto@aalto.fi>
+
+usage() {
+  cat << EOM
+
+  $(basename $0):
+
+  This script will create a singularity image with jenkins as its owner.
+  Arguments are supplied to "singularity create".
+
+  Usage:
+    $(basename $0) ubuntu-1604.img
+
+EOM
+  exit 0
+}
+
+if [ $# -le 1 ] ; then
+  usage
+  exit 1
+fi
+
+if [ $USER != "root" ]; then
+  echo "This script should be run as root!"
+  exit 1
+fi
+
+filename=${@: -1}
+
+if [ -e "$filename" ]; then
+  echo 'Image already exists. Quitting.'
+  exit 1
+fi
+
+singularity create "$@"
+
+if [ -f "$filename" ]; then
+  chown jenkins.jenkins $filename
+fi
+
+exit 0

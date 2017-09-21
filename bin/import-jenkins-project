@@ -1,0 +1,30 @@
+#!/bin/bash
+
+nopts=$#
+
+if [[ $nopts -ne 3 ]]; then
+  cat << EOF
+
+    This script connects to server JENKINS_URL through SSH,
+    after which it connects to jenkins in port JENKINS_PORT using your
+    local SSH keys and finally creates a jenkins job 
+    JOB_NAME from JOB_NAME.xml.
+
+    USAGE:
+
+        $0 JENKINS_URL JENKINS_PORT JOB_NAME
+
+EOF
+  exit 0
+fi
+
+JENKINS_URL=$1
+JENKINS_PORT=$2
+JOB_NAME=$3
+
+if [ ! -e 'jenkins-cli.jar' ]; then
+  wget $JENKINS_URL/jnlpJars/jenkins-cli.jar &> /dev/null
+fi
+
+echo 'Trying to export job...'
+ssh $JENKINS_URL "java -jar jenkins-cli.jar -s http://localhost:$JENKINS_PORT -ssh -user $USER create-job $JOB_NAME" < $JOB_NAME.xml

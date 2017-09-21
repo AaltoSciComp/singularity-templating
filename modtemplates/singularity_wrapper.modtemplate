@@ -1,0 +1,21 @@
+help([[ {{ help }} ]])
+
+whatis([[ {{ whatis }} ]])
+
+conflict("{{ name }}")
+
+{% if singularity %}
+setenv("SING_IMAGE", "{{ singularity.imageroot }}/{{ programname }}-{{ version }}.img"))
+setenv("SING_FLAGS", "{{ singularity.flags|join(' ') }}")
+prepend_path("PATH", "{{ singularity.wrapperroot }}")
+{% endif %}
+
+{% if path %}
+{% for path in paths %}
+prepend_path("PATH", "{{ path }}")
+{% endfor %}
+{% for path in librarypaths %}
+prepend_path("LIBRARY_PATH", "{{ path }}")
+prepend_path("LD_LIBRARY_PATH", "{{ path }}")
+{% endfor %}
+{% endif %}

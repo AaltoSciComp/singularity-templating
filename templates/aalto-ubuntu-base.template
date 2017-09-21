@@ -1,0 +1,43 @@
+#
+# Base Ubuntu template with Aalto Ubuntu and
+# Triton integration
+# 
+# Installs Ubuntu version os.name from os.mirror
+# and installs packages apt.extra_packages
+#
+# Author: Simo Tuomisto <simo.tuomisto@aalto.fi>
+#
+
+{% block bootstrap %}{% endblock %}
+
+%setup
+    {% block setup %}exit 0{% endblock %}
+
+%runscript
+    {% block run %}exit 0{% endblock %}
+
+%post
+    echo 'Creating mountpoints'
+    mkdir -p /u
+    for i in $(seq 0 9); do for j in $(seq 0 9) ; do ln -s /m/home/home$i/$i$j /u/$i$j ; done ; done
+    mkdir -p /scratch
+    mkdir -p /m
+    mkdir -p /l
+    mkdir -p /libhost
+    for i in $(seq 2 9); do mkdir -p /libhost$i ; done
+    mkdir -p /libused
+    mkdir -p /share
+    echo 'deb {{ os.mirror }} {{ os.name }} main universe multiverse' > /etc/apt/sources.list
+    apt-get update
+    apt-get -y install vim wget language-pack-fi  \
+       language-pack-en bash zsh findutils less coreutils
+    export LC_ALL=C && export LANGUAGE=C
+    {% if apt %}
+    {% if apt.extra_packages %}
+    apt-get update
+    apt-get -y install {{ apt.extra_packages|join(' ') }}
+    apt-get clean
+    {% endif %}
+    {% endif %}
+
+    {% block post %}exit 0{% endblock %}

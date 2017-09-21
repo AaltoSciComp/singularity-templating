@@ -1,0 +1,14 @@
+#
+# Aalto Ubuntu when built from deb image
+#
+# Author: Simo Tuomisto <simo.tuomisto@aalto.fi>
+#
+{% extends "aalto-ubuntu-base.template" %}
+
+{% block bootstrap %}
+
+BootStrap: debootstrap
+OSVersion: {{ os.name }}
+MirrorURL: http://us.archive.ubuntu.com/ubuntu/
+
+{% endblock %}

@@ -1,0 +1,87 @@
+#!/usr/bin/env python
+from __future__ import print_function
+
+from argparse import ArgumentParser,RawTextHelpFormatter
+from yaml import load,dump
+from os.path import isfile,isdir,join
+import sys
+from jinja2 import Template, FileSystemLoader
+from jinja2.environment import Environment
+
+desc=r"""
+
+    This program reads fill.yml from the current folder that must be in the 
+    following format: 
+
+    lookup_dirs: <lookup folders for additional templates / snippets>
+    singularity_parameters:
+        template_name: <template to use>
+        <parameter1>: <value1>
+                   ...
+    module_parameters:
+        template_name: <template to use>
+        <parameter1>: <value1>
+                   ...
+    jenkins_parameters:
+        template_name: <template to use>
+        description: <description of the job>
+        repository: <repository to monitor>
+        imagesize: <image size in MB>
+        <parameter1>: <value1>
+                   ...
+
+    secrets.yml is also loaded if secret keys etc. are needed.
+
+"""
+
+parser = ArgumentParser(description=desc,formatter_class=RawTextHelpFormatter)
+parser.add_argument('-p',
+                    help="List of parameter=value pairs separated with commas")
+parser.add_argument('-t','--template',
+                    default=('singularity'),
+                    choices=('singularity','module','jenkins'), 
+                    help="""Which template should be filled:
+Singularity definition, Lmod module or Jenkins job XML""")
+
+args=parser.parse_args()
+
+template_type=args.template
+
+if not isfile('fill.yml'):
+    print('fill.yml does not exist!',file=sys.stderr)
+    sys.exit(1)
+
+with open('fill.yml','r') as f:
+    parameters = load(f.read())
+
+lookup_dirs = parameters.get('lookup_dirs',[])
+parameters  = parameters['{0}_parameters'.format(template_type)]
+
+if args.p is not None:
+    parameters_extra=dict(map(lambda x: x.split('='),args.p.split(',')))
+    parameters.update(parameters_extra)
+
+
+"""
+Read in secrets.yml in case when some information does not want to be 
+distributed in the repository. 
+
+e.g. credentialsID and secretToken for Jenkins GIT hook
+"""
+if isfile('secrets.yml'):
+    with open('secrets.yml','r') as f:
+        secrets = load(f.read())
+
+    parameters.update(secrets)
+
+folderlist = []
+
+for rootfolder in lookup_dirs:
+    for subfolder in ('','templates','modtemplates','jobtemplates'):
+        folder = join(rootfolder,subfolder)
+        if isdir(folder):
+            folderlist.append(folder)
+
+env = Environment(loader=FileSystemLoader(folderlist))
+template = env.get_template(parameters['template_name'])
+print(template.render(**parameters))

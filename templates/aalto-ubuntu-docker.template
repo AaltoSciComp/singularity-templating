@@ -1,0 +1,13 @@
+#
+# Aalto Ubuntu when built from docker image
+#
+# Author: Simo Tuomisto <simo.tuomisto@aalto.fi>
+#
+{% extends "aalto-ubuntu-base.template" %}
+
+{% block bootstrap %}
+
+BootStrap: docker
+From: {{ docker.url }}
+
+{% endblock %}

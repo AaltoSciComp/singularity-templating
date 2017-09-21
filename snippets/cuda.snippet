@@ -1,0 +1,27 @@
+    #
+    # This snippet installs CUDA in container
+    # and creates a mountpoint for system libraries
+    # in /opt/nvidia.
+    #
+    # Author: Simo Tuomisto <simo.tuomisto@aalto.fi>
+    #
+    echo 'Installing CUDA ...'
+    wget {{ cuda.repourl }}
+    dpkg -i cuda-repo-ubuntu{{ os.package_ver }}_{{ cuda.ver }}-1_amd64.deb && rm -f cuda-repo-*.deb
+    apt-get clean && apt-get -y update && apt-get -y install cuda-minimal-build-{{ cuda.package_ver }} cuda-command-line-tools-{{ cuda.package_ver }} cuda-toolkit-{{ cuda.package_ver }} git
+    ln -s /usr/local/cuda-*/ /usr/local/cuda && export CUDA_PATH=/usr/local/cuda && export CUDA_HOME=/usr/local/cuda && export CUDA_INC=/usr/local/cuda/include && export CUDA_SDK_ROOT_DIR=/usr/local/cuda && export CUDADIR=/usr/local/cuda && export CUDA_VERSION={{ cuda.ver }} && export CUDA_ROOT=/usr/local/cuda
+    env |grep "^CUDA"|sed -e "s/^/export /" >> /environment
+    export PATH=$CUDA_PATH/bin:$PATH 
+    echo "export PATH=\$CUDA_PATH/bin:\$PATH" >> /environment
+    export LD_LIBRARY_PATH=/libhost:$LD_LIBRARY_PATH:$CUDA_PATH/lib64
+    echo "export LD_LIBRARY_PATH=/libhost:\$CUDA_PATH/lib64:\$LD_LIBRARY_PATH" >> /environment
+    export LD_RUN_PATH=/libhost:$LD_RUN_PATH:$CUDA_PATH/lib64
+    echo "export LD_RUN_PATH=/libhost:\$CUDA_PATH/lib64:\$LD_RUN_PATH" >> /environment
+    echo 'Installing CUDNN ...'
+    export PATH=/usr/local/cuda-{{ cuda.install_ver }}/bin:$PATH
+    wget {{ cudnn.url }}
+    tar -xzf cudnn-*.tgz -C /usr/local/ && rm -f cudnn-*.tgz* 
+
+    mkdir -p /opt/nvidia
+    export LD_LIBRARY_PATH=/opt/nvidia:$LD_LIBRARY_PATH
+    echo "export LD_LIBRARY_PATH=/opt/nvidia:\$LD_LIBRARY_PATH" >> /environment

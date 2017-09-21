@@ -1,0 +1,202 @@
+#!/usr/bin/env python
+from __future__ import print_function
+import subprocess
+from argparse import ArgumentParser,RawTextHelpFormatter
+from jinja2 import Template, FileSystemLoader
+from jinja2.environment import Environment
+from yaml import load,dump
+import os
+from distutils.util import strtobool
+import sys
+
+results = dict()
+server_info = None
+
+def confirm(question,default=False):
+    """
+    Small function to get answers from user
+    """
+    sys.stdout.write(question)
+    try:
+        answer=bool(strtobool(raw_input()))
+    except ValueError:
+        answer=default
+    return answer
+
+def collect_server_info():
+    sys.stdout.write('What is the hostname of your Jenkins server? ')
+    server=str(raw_input())
+
+    sys.stdout.write('What is the local port of your Jenkins server? [8080]')
+    port=str(raw_input())
+    if len(port) == 0:
+        port = '8080'
+    server_info = {'server':server,'port':port}
+    return server_info
+
+def end(exit_code):
+    """
+    Small function that writes what was done
+    """
+    resultstr = r"""
+    -------------------------------
+
+    fill.yml written     - [{%if fill %}X{% else %} {% endif %}]
+    job template written - [{%if jtemplate %}X{% else %} {% endif %}]
+    job xml written      - [{%if jxml %}X{% else %} {% endif %}]
+    Jenkins job created  - [{%if jcreate %}X{% else %} {% endif %}]
+
+    """
+    print(Template(resultstr).render(results))
+    sys.exit(exit_code)
+
+desc=r"""
+
+This program should be run in a git repository that is connected
+to a Gitlab instance. It will generate 
+    - a sample fill.yml that can be used to generate singularity definitions.
+    - a templates folder for further singularity templating
+    - a secret file and a singularity job template based on a pre-existing
+      Jenkins project
+
+"""
+
+# Argument parsing
+
+parser = ArgumentParser(description=desc,formatter_class=RawTextHelpFormatter)
+
+args=parser.parse_args()
+
+template_pars=dict()
+
+print('\nStep 1 - Getting repo information:\n')
+
+try:
+    template_pars['repo_url']=subprocess.check_output(['git','remote','get-url','origin']).strip()
+    answer=confirm("Git repository with remote url '{0}' found. Is this correct? [Y/n] ".format(template_pars['repo_url']), default=True)
+    if not answer:
+        print('Quitting...')
+        end(0)
+except Exception,e:
+    sys.stderr.write('Could not find a git repository in the current folder.\n')
+    end(1)
+
+# Singularity template writing
+
+print('\nStep 2 - Writing an example singularity fill.yml:\n')
+
+fill_template=r"""
+lookup_dirs:
+  - .
+  - jenkins-singularity-common
+singularity_parameters:
+  template_name: aalto-ubuntu-image.template
+  os: 
+    name: xenial
+    package_ver: 1604
+    mirror: http://fi.archive.ubuntu.com/ubuntu/
+jenkins_parameters:
+  template_name: singularity-jenkins.jobtemplate
+  description: 'A test project with simple Aalto Ubuntu image'
+  imagesize: 2048
+  repository: {{ repo_url }}
+
+"""
+
+template = Environment().from_string(fill_template)
+
+if os.path.isfile('fill.yml'):
+    write_fill = confirm('fill.yml exists. Do you want to overwrite it? [y/N] ',
+                        default=False)
+else:
+    write_fill = True
+
+if write_fill:
+    with open('fill.yml','w') as f:
+        f.write(template.render(**template_pars))
+        results['fill']=True
+
+# Jenkins template export
+
+print('\nStep #3 - Creating job template from a job in the Jenkins server:\n')
+
+if os.path.isfile('singularity-jenkins.jobtemplate'):
+    write_jtemplate = confirm('singularity-jenkins.jobtemplate exists. Do you want to overwrite it [y/N]?', default=False)
+else:
+    write_jtemplate=True
+
+if write_jtemplate:
+    sys.stdout.write('What job would you like to use for templating? ')
+    jobname=str(raw_input())
+    if len(jobname) == 0:
+        print('\nEmpty jobname. Quitting')
+        end(1)
+    jobfile='{0}.xml'.format(jobname)
+
+    if os.path.isfile(jobfile):
+        do_export = confirm('{0} exists. Do you want to re-export it [y/N]?'.format(jobfile), default=False)
+    else:
+        do_export = True
+
+    if do_export:
+        if server_info is None:
+            server_info = collect_server_info()
+        try:
+            subprocess.check_output(['export-jenkins-project',server_info['server'],server_info['port'],jobname])
+        except Exception,e:
+            print('Could not retreive the job.')
+            end(1)
+        print('Export successful.')
+
+    try:
+        subprocess.check_output(['create-jenkins-template',jobfile])
+    except Exception,e:
+        print('Could not create the template.')
+        end(1)
+
+    results['jtemplate'] = True
+
+# Job configuration creation
+
+print('\nStep #4 - Creating Jenkins job configuration:\n')
+
+sys.stdout.write('What is the name of this project? ')
+projectname=str(raw_input())
+if len(projectname) == 0:
+    print('\nEmpty projectname. Quitting')
+    end(1)
+projectfile='{0}.xml'.format(projectname)
+
+if os.path.isfile(projectfile):
+    write_jxml = confirm('{0} exists. Do you want to overwrite it [y/N]?'.format(projectfile), default=False)
+else:
+    write_jxml = True
+
+if write_jxml:
+    try:
+        output=subprocess.check_output(['fill-template','-t','jenkins'])
+        with open(projectfile,'w') as f:
+            f.write(output)
+        results['jxml'] = True
+    except KeyError,e:
+        print('Could not write the job xml.')
+        end(1)
+
+# Jenkins job creation
+
+print('\nStep #5 - Creating Jenkins job:\n')
+
+if server_info is None:
+    server_info = collect_server_info()
+
+try:
+    subprocess.check_output(['import-jenkins-project',server_info['server'],server_info['port'],projectname])
+    results['jcreate'] = True
+except Exception,e:
+    print('Could not create the Jenkins job.')
+    end(1)
+
+print('Job created. Do not forget to add the deployment key and this GitLab web hook:\nhttps://{0}/project/{1}\n'.format(server_info['server'], projectname))
+print('You can now remove all other files than fill.yml')
+
+end(0)

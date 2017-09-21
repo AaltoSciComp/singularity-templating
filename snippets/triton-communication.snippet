@@ -1,0 +1,94 @@
+    #
+    # This snippet creates mountpoints for InfiniBand drivers
+    # and links relevant libraries from /libhost to
+    # /opt/mellanox
+    #
+    # Adapted from:
+    # http://singularity.lbl.gov/tutorial-gpu-drivers-open-mpi-mtls
+    #
+    # Author: Simo Tuomisto <simo.tuomisto@aalto.fi>
+    #
+    mkdir -p /opt/mellanox
+    mkdir /etc/libibverbs.d || echo "Directory exists"
+    echo "driver mlx4" > /etc/libibverbs.d/mlx4.driver
+    echo "driver mlx5" > /etc/libibverbs.d/mlx5.driver
+    adduser slurm || echo "User exists"
+    echo "export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:/opt/mellanox/mxm/lib/:/libused" >> /environment
+    cat << LIBRARIES | xargs -I{} ln -s /libhost/{} /libused/{}
+libibcm.a
+libibcm.so
+libibcm.so.1
+libibcm.so.1.0.0
+libibdiag-2.1.1.so
+libibdiag.a
+libibdiag.la
+libibdiag.so
+libibdiagnet_plugins_ifc-2.1.1.so
+libibdiagnet_plugins_ifc.a
+libibdiagnet_plugins_ifc.la
+libibdiagnet_plugins_ifc.so
+libibdmcom-2.1.1.so
+libibdmcom.a
+libibdmcom.la
+libibdmcom.so
+libiberty.a
+libibis-2.1.1.so.3
+libibis-2.1.1.so.3.0.3
+libibis.a
+libibis.la
+libibis.so
+libibmad.a
+libibmad.so
+libibmad.so.5
+libibmad.so.5.5.0
+libibnetdisc.a
+libibnetdisc.so
+libibnetdisc.so.5
+libibnetdisc.so.5.3.0
+libibsysapi-2.1.1.so
+libibsysapi.a
+libibsysapi.la
+libibsysapi.so
+libibumad.a
+libibumad.so
+libibumad.so.3
+libibumad.so.3.1.0
+libibus-1.0.so.5
+libibus-1.0.so.5.0.503
+libibus-qt.so.1
+libibus-qt.so.1.3.0
+libibverbs.a
+libibverbs.so
+libibverbs.so.1
+libibverbs.so.1.0.0
+liblustreapi.so
+libmlx4-rdmav2.so
+libmlx4.a
+libmlx5-rdmav2.so
+libmlx5.a
+libnl.so.1
+libnuma.so.1
+libosmcomp.a
+libosmcomp.so
+libosmcomp.so.3
+libosmcomp.so.3.0.6
+libosmvendor.a
+libosmvendor.so
+libosmvendor.so.3
+libosmvendor.so.3.0.8
+libpciaccess.so.0
+librdmacm.so.1
+libwrap.so.0
+libpmi.so
+libpmi.so.0
+libpmi.so.0.0.0
+libpmi2.so
+libpmi2.so.0
+libpmi2.so.0.0.0
+libslurm.so
+libslurm.so.30
+libslurm.so.30.0.0
+libslurmdb.so
+libslurmdb.so.30
+libslurmdb.so.30.0.0
+LIBRARIES

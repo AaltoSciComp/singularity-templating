@@ -1,0 +1,45 @@
+#!/bin/bash
+
+nopts=$#
+
+if [[ $nopts -ne 1 ]]; then
+  cat << EOF
+
+    This scripts creates a jenkins job template 
+    singularity-jenkins.jobtemplate based on a INPUT_XML.
+
+    It can also create secrets.yml that houses previous
+    job's credentialId and secretToken.
+
+    USAGE:
+
+        $0 INPUT_XML
+
+EOF
+  exit 0
+fi
+
+INPUT_XML=$1
+
+cp $INPUT_XML singularity-jenkins.jobtemplate
+
+credentialsId=$(grep -oP '(?<=<credentialsId>).*(?=</credentialsId>)' singularity-jenkins.jobtemplate)
+secretToken=$(grep -oP '(?<=<secretToken>).*(?=</secretToken>)' singularity-jenkins.jobtemplate)
+
+read -p "Do you want to store the secrets in secrets.yml (y/N)? " answer
+case ${answer:0:1} in
+  y|Y )
+    cat > secrets.yml << EOF
+credentialsId: '$credentialsId'
+secretToken: '$secretToken'
+EOF
+    ;;
+  * )
+    ;;
+esac
+
+sed -i 's/<description>.*<\/description>/<description>{% if description %}{{ description }}{% endif %}<\/description>/g' singularity-jenkins.jobtemplate
+sed -i 's/<url>.*<\/url>/<url>{% if repository %}{{ repository }}{% endif %}<\/url>/g' singularity-jenkins.jobtemplate
+sed -i 's/<credentialsId>.*<\/credentialsId>/<credentialsId>{% if credentialsId %}{{ credentialsId }}{% endif %}<\/credentialsId>/g' singularity-jenkins.jobtemplate
+sed -i 's/<secretToken>.*<\/secretToken>/<secretToken>{% if secretToken %}{{ secretToken }}{% endif %}<\/secretToken>/g' singularity-jenkins.jobtemplate
+sed -i 's/create-singularity-image -s [0-9]\+/create-singularity-image -s {{imagesize}}/g' singularity-jenkins.jobtemplate
