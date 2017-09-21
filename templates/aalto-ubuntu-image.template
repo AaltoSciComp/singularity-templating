@@ -9,6 +9,6 @@
 
 BootStrap: debootstrap
 OSVersion: {{ os.name }}
-MirrorURL: http://us.archive.ubuntu.com/ubuntu/
+MirrorURL: {{ os.mirror }}
 
 {% endblock %}
