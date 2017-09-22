@@ -88,7 +88,7 @@ print('\nStep 2 - Writing an example singularity fill.yml:\n')
 fill_template=r"""
 lookup_dirs:
   - .
-  - singularity-templates
+  - singularity-templating
 singularity_parameters:
   template_name: aalto-ubuntu-image.template
   os: 
@@ -98,7 +98,7 @@ singularity_parameters:
 jenkins_parameters:
   template_name: singularity-jenkins.jobtemplate
   description: 'A test project with simple Aalto Ubuntu image'
-  imagesize: 2048
+  imagesize: {{ imagesize }}
   repository: {{ repo_url }}
 
 """
@@ -112,6 +112,11 @@ else:
     write_fill = True
 
 if write_fill:
+    sys.stdout.write('What should the image size be in MBs? [2048]')
+    imagesize=str(raw_input())
+    if len(imagesize) == 0:
+        imagesize = '2048'
+    template_pars['imagesize'] = imagesize
     with open('fill.yml','w') as f:
         f.write(template.render(**template_pars))
         results['fill']=True
