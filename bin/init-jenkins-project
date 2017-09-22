@@ -120,7 +120,7 @@ if write_fill:
 
 print('\nStep #3 - Creating job template from a job in the Jenkins server:\n')
 
-if os.path.isfile('singularity-jenkins.jobtemplate'):
+if os.path.isfile('jobtemplates/singularity-jenkins.jobtemplate'):
     write_jtemplate = confirm('singularity-jenkins.jobtemplate exists. Do you want to overwrite it [y/N]?', default=False)
 else:
     write_jtemplate=True
