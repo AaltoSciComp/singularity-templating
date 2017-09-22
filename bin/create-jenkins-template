@@ -29,7 +29,7 @@ secretToken=$(grep -oP '(?<=<secretToken>).*(?=</secretToken>)' singularity-jenk
 read -p "Do you want to store the secrets in secrets.yml (y/N)? " answer
 case ${answer:0:1} in
   y|Y )
-    cat > secrets.yml << EOF
+    cat >> secrets.yml << EOF
 credentialsId: '$credentialsId'
 secretToken: '$secretToken'
 EOF

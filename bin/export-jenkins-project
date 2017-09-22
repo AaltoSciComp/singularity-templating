@@ -22,9 +22,10 @@ JENKINS_URL=$1
 JENKINS_PORT=$2
 JOB_NAME=$3
 
+echo 'Trying to export job...'
+ssh $JENKINS_URL "
 if [ ! -e 'jenkins-cli.jar' ]; then
-  wget $JENKINS_URL/jnlpJars/jenkins-cli.jar &> /dev/null
+  wget http://localhost:$JENKINS_PORT/jnlpJars/jenkins-cli.jar &> /dev/null
 fi
 
-echo 'Trying to export job...'
-ssh $JENKINS_URL "java -jar jenkins-cli.jar -s http://localhost:$JENKINS_PORT -ssh -user $USER get-job $JOB_NAME" > $JOB_NAME.xml
+java -jar jenkins-cli.jar -s http://localhost:$JENKINS_PORT -ssh -user $USER get-job $JOB_NAME" > $JOB_NAME.xml

@@ -1,0 +1,10 @@
+lookup_dirs:
+  - .
+  - singularity-templates
+  - ~/singularity-templates
+singularity_parameters:
+  template_name: aalto-ubuntu-image.template
+  os: 
+    name: xenial
+    package_ver: 1604
+    mirror: http://fi.archive.ubuntu.com/ubuntu/

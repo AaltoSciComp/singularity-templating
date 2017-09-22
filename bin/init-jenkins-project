@@ -88,7 +88,7 @@ print('\nStep 2 - Writing an example singularity fill.yml:\n')
 fill_template=r"""
 lookup_dirs:
   - .
-  - jenkins-singularity-common
+  - singularity-templates
 singularity_parameters:
   template_name: aalto-ubuntu-image.template
   os: 
