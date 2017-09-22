@@ -3,7 +3,7 @@ from __future__ import print_function
 
 from argparse import ArgumentParser,RawTextHelpFormatter
 from yaml import load,dump
-from os.path import isfile,isdir,join
+from os.path import isfile,isdir,join,expandvars,expanduser
 import sys
 from jinja2 import Template, FileSystemLoader
 from jinja2.environment import Environment
@@ -77,7 +77,8 @@ if isfile('secrets.yml'):
 folderlist = []
 
 for rootfolder in lookup_dirs:
-    for subfolder in ('','snippets','templates','modtemplates','jobtemplates'):
+    rootfolder = expandvars(expanduser(rootfolder))
+    for subfolder in ('snippets','templates','modtemplates','jobtemplates'):
         folder = join(rootfolder,subfolder)
         if isdir(folder):
             folderlist.append(folder)

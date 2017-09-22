@@ -89,11 +89,18 @@ Add bin-folder to path:
 export PATH=~/singularity-templating/bin:$PATH
 ```
 
+Now you should go to a folder where you want to start your new project:
+```
+cd /tmp
+mkdir my-test-project
+cd my-test-project
+```
+
 You need a fill.yml that describes has parameters for templates and tells where
 to look for further templates. There exists a fill.yml.example that you can copy
 for testing:
 ```sh
-cp fill.yml.example fill.yml
+cp ~/singularity-templating/fill.yml.example fill.yml
 ```
 If you cloned singularity-templating to some other folder, change 
 lookup\_dirs-list in fill.yml accordingly.
@@ -106,7 +113,7 @@ fill-template > Aalto-Ubuntu.def
 Then you can build the Singularity image normally:
 ```sh
 sudo singularity create -s 2048 Aalto-Ubuntu.img
-sudo singularity bootstrap Aalto-Ubuntu.img
+sudo singularity bootstrap Aalto-Ubuntu.img Aalto-Ubuntu.def
 ```
 
 ## Usage for Jenkins builds

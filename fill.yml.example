@@ -1,7 +1,7 @@
 lookup_dirs:
   - .
-  - singularity-templates
-  - ~/singularity-templates
+  - singularity-templating
+  - ~/singularity-templating
 singularity_parameters:
   template_name: aalto-ubuntu-image.template
   os: 
