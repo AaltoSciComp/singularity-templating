@@ -28,15 +28,15 @@ cp $INPUT_XML jobtemplates/singularity-jenkins.jobtemplate
 credentialsId=$(grep -oP '(?<=<credentialsId>).*(?=</credentialsId>)' jobtemplates/singularity-jenkins.jobtemplate)
 secretToken=$(grep -oP '(?<=<secretToken>).*(?=</secretToken>)' jobtemplates/singularity-jenkins.jobtemplate)
 
-read -p "Do you want to store the secrets in secrets.yml (y/N)? " answer
+read -p "Do you want to store the secrets in secrets.yml [Y/n]? " answer
 case ${answer:0:1} in
-  y|Y )
+  n|N )
+    ;;
+  * )
     cat >> secrets.yml << EOF
 credentialsId: '$credentialsId'
 secretToken: '$secretToken'
 EOF
-    ;;
-  * )
     ;;
 esac
 
