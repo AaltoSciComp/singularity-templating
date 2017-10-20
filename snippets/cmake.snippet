@@ -1,0 +1,12 @@
+    #
+    # This snippet installs cmake in container.
+    #
+    # Author: Simo Tuomisto <simo.tuomisto@aalto.fi>
+    #
+    echo 'Installing CMAKE ...'
+    wget https://cmake.org/files/v{{ cmake.majorversion }}/cmake-{{ cmake.version }}-Linux-x86_64.tar.gz
+    tar xzf cmake-{{ cmake.version }}-Linux-x86_64.tar.gz
+    mv cmake-{{ cmake.version }}-Linux-x86_64 cmake
+    rm cmake-{{ cmake.version }}-Linux-x86_64.tar.gz
+    export PATH=/opt/cmake/bin:$PATH 
+    echo "export PATH=/opt/cmake/bin:\$PATH" >> /environment
